@@ -54,11 +54,10 @@ class AnalyticsConductor:
         self.agent = self._create_agent()
         self.playbook = ANALYTICS_PLAYBOOK_V2
     
-    def _create_agent(self) -> Agent:
+    def _create_agent(self) -> Agent[None, ChartSelection]:
         """Create LLM agent for chart selection."""
         return Agent(
             create_model_with_fallback("gemini-2.0-flash-exp"),
-            result_type=ChartSelection,
             system_prompt="""You are an expert data visualization consultant.
             Your role is to select the most appropriate chart type based on:
             1. The user's analytics request and intent
@@ -156,7 +155,7 @@ class AnalyticsConductor:
         """
         
         try:
-            result = await self.agent.run(prompt)
+            result = await self.agent.run(prompt, result_type=ChartSelection)
             selection = result.data
             
             # Validate chart types
