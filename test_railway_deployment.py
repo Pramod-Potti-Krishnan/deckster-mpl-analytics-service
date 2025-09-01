@@ -18,6 +18,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 import sys
 import os
+import ssl
 
 # Configuration
 RAILWAY_URL = "wss://deckster-mpl-analytics-service-production.up.railway.app/ws"
@@ -78,24 +79,36 @@ TEST_CASES = [
             "content": "Show monthly revenue trend for 2024 with growth indicators",
             "title": "2024 Monthly Revenue Analysis",
             "data": [
-                {"month": "Jan", "revenue": 125000, "target": 120000},
-                {"month": "Feb", "revenue": 135000, "target": 130000},
-                {"month": "Mar", "revenue": 142000, "target": 140000},
-                {"month": "Apr", "revenue": 138000, "target": 145000},
-                {"month": "May", "revenue": 155000, "target": 150000},
-                {"month": "Jun", "revenue": 168000, "target": 160000},
-                {"month": "Jul", "revenue": 175000, "target": 170000},
-                {"month": "Aug", "revenue": 182000, "target": 175000},
-                {"month": "Sep", "revenue": 195000, "target": 185000},
-                {"month": "Oct", "revenue": 205000, "target": 195000},
-                {"month": "Nov", "revenue": 218000, "target": 210000},
-                {"month": "Dec", "revenue": 230000, "target": 220000}
+                {"label": "Jan", "value": 125000, "series": "revenue"},
+                {"label": "Jan", "value": 120000, "series": "target"},
+                {"label": "Feb", "value": 135000, "series": "revenue"},
+                {"label": "Feb", "value": 130000, "series": "target"},
+                {"label": "Mar", "value": 142000, "series": "revenue"},
+                {"label": "Mar", "value": 140000, "series": "target"},
+                {"label": "Apr", "value": 138000, "series": "revenue"},
+                {"label": "Apr", "value": 145000, "series": "target"},
+                {"label": "May", "value": 155000, "series": "revenue"},
+                {"label": "May", "value": 150000, "series": "target"},
+                {"label": "Jun", "value": 168000, "series": "revenue"},
+                {"label": "Jun", "value": 160000, "series": "target"},
+                {"label": "Jul", "value": 175000, "series": "revenue"},
+                {"label": "Jul", "value": 170000, "series": "target"},
+                {"label": "Aug", "value": 182000, "series": "revenue"},
+                {"label": "Aug", "value": 175000, "series": "target"},
+                {"label": "Sep", "value": 195000, "series": "revenue"},
+                {"label": "Sep", "value": 185000, "series": "target"},
+                {"label": "Oct", "value": 205000, "series": "revenue"},
+                {"label": "Oct", "value": 195000, "series": "target"},
+                {"label": "Nov", "value": 218000, "series": "revenue"},
+                {"label": "Nov", "value": 210000, "series": "target"},
+                {"label": "Dec", "value": 230000, "series": "revenue"},
+                {"label": "Dec", "value": 220000, "series": "target"}
             ],
             "chart_preference": "line_chart",
             "theme": {
-                "color_palette": "modern",
-                "show_grid": True,
-                "show_legend": True
+                "primary": "#2563EB",
+                "secondary": "#10B981",
+                "style": "modern"
             },
             "enhance_labels": True
         }
@@ -106,16 +119,17 @@ TEST_CASES = [
             "content": "Compare Q4 2024 sales performance across product categories",
             "title": "Q4 2024 Product Category Performance",
             "data": [
-                {"category": "Electronics", "sales": 450000, "units": 3200},
-                {"category": "Clothing", "sales": 320000, "units": 8500},
-                {"category": "Home & Garden", "sales": 280000, "units": 2100},
-                {"category": "Sports & Outdoors", "sales": 195000, "units": 1800},
-                {"category": "Books & Media", "sales": 125000, "units": 5200}
+                {"label": "Electronics", "value": 450000},
+                {"label": "Clothing", "value": 320000},
+                {"label": "Home & Garden", "value": 280000},
+                {"label": "Sports & Outdoors", "value": 195000},
+                {"label": "Books & Media", "value": 125000}
             ],
             "chart_preference": "bar_chart_vertical",
             "theme": {
-                "color_palette": "vibrant",
-                "show_values": True
+                "primary": "#8B5CF6",
+                "secondary": "#EC4899",
+                "style": "modern"
             },
             "enhance_labels": True
         }
@@ -126,18 +140,19 @@ TEST_CASES = [
             "content": "Display market share distribution for cloud providers in 2024",
             "title": "Cloud Market Share 2024",
             "data": [
-                {"provider": "AWS", "market_share": 32.5, "revenue_billions": 95.2},
-                {"provider": "Azure", "market_share": 23.8, "revenue_billions": 69.7},
-                {"provider": "Google Cloud", "market_share": 11.2, "revenue_billions": 32.8},
-                {"provider": "Alibaba Cloud", "market_share": 8.3, "revenue_billions": 24.3},
-                {"provider": "IBM Cloud", "market_share": 4.7, "revenue_billions": 13.8},
-                {"provider": "Others", "market_share": 19.5, "revenue_billions": 57.1}
+                {"label": "AWS", "value": 32.5},
+                {"label": "Azure", "value": 23.8},
+                {"label": "Google Cloud", "value": 11.2},
+                {"label": "Alibaba Cloud", "value": 8.3},
+                {"label": "IBM Cloud", "value": 4.7},
+                {"label": "Others", "value": 19.5}
             ],
             "chart_preference": "pie_chart",
             "theme": {
-                "color_palette": "professional",
-                "show_percentages": True,
-                "explode_largest": True
+                "primary": "#FF6600",
+                "secondary": "#146EB4",
+                "tertiary": "#232F3E",
+                "style": "classic"
             },
             "enhance_labels": True
         }
@@ -148,32 +163,32 @@ TEST_CASES = [
             "content": "Analyze correlation between customer satisfaction scores and purchase values",
             "title": "Customer Satisfaction vs Purchase Value Analysis",
             "data": [
-                {"satisfaction": 4.8, "purchase_value": 1250, "customer_id": "C001"},
-                {"satisfaction": 3.2, "purchase_value": 450, "customer_id": "C002"},
-                {"satisfaction": 4.5, "purchase_value": 980, "customer_id": "C003"},
-                {"satisfaction": 2.8, "purchase_value": 320, "customer_id": "C004"},
-                {"satisfaction": 4.9, "purchase_value": 1580, "customer_id": "C005"},
-                {"satisfaction": 3.7, "purchase_value": 670, "customer_id": "C006"},
-                {"satisfaction": 4.2, "purchase_value": 890, "customer_id": "C007"},
-                {"satisfaction": 3.5, "purchase_value": 520, "customer_id": "C008"},
-                {"satisfaction": 4.7, "purchase_value": 1120, "customer_id": "C009"},
-                {"satisfaction": 2.9, "purchase_value": 380, "customer_id": "C010"},
-                {"satisfaction": 4.6, "purchase_value": 1340, "customer_id": "C011"},
-                {"satisfaction": 3.8, "purchase_value": 750, "customer_id": "C012"},
-                {"satisfaction": 4.1, "purchase_value": 920, "customer_id": "C013"},
-                {"satisfaction": 3.3, "purchase_value": 480, "customer_id": "C014"},
-                {"satisfaction": 4.4, "purchase_value": 1050, "customer_id": "C015"},
-                {"satisfaction": 3.9, "purchase_value": 810, "customer_id": "C016"},
-                {"satisfaction": 4.3, "purchase_value": 970, "customer_id": "C017"},
-                {"satisfaction": 3.6, "purchase_value": 590, "customer_id": "C018"},
-                {"satisfaction": 4.8, "purchase_value": 1420, "customer_id": "C019"},
-                {"satisfaction": 3.1, "purchase_value": 410, "customer_id": "C020"}
+                {"label": "C001", "value": 1250, "x": 4.8},
+                {"label": "C002", "value": 450, "x": 3.2},
+                {"label": "C003", "value": 980, "x": 4.5},
+                {"label": "C004", "value": 320, "x": 2.8},
+                {"label": "C005", "value": 1580, "x": 4.9},
+                {"label": "C006", "value": 670, "x": 3.7},
+                {"label": "C007", "value": 890, "x": 4.2},
+                {"label": "C008", "value": 520, "x": 3.5},
+                {"label": "C009", "value": 1120, "x": 4.7},
+                {"label": "C010", "value": 380, "x": 2.9},
+                {"label": "C011", "value": 1340, "x": 4.6},
+                {"label": "C012", "value": 750, "x": 3.8},
+                {"label": "C013", "value": 920, "x": 4.1},
+                {"label": "C014", "value": 480, "x": 3.3},
+                {"label": "C015", "value": 1050, "x": 4.4},
+                {"label": "C016", "value": 810, "x": 3.9},
+                {"label": "C017", "value": 970, "x": 4.3},
+                {"label": "C018", "value": 590, "x": 3.6},
+                {"label": "C019", "value": 1420, "x": 4.8},
+                {"label": "C020", "value": 410, "x": 3.1}
             ],
             "chart_preference": "scatter_plot",
             "theme": {
-                "color_palette": "gradient",
-                "show_trendline": True,
-                "show_correlation": True
+                "primary": "#06B6D4",
+                "secondary": "#F59E0B",
+                "style": "modern"
             },
             "enhance_labels": True
         }
@@ -183,24 +198,41 @@ TEST_CASES = [
         "request": {
             "content": "Show website traffic patterns across days of the week and hours",
             "title": "Weekly Website Traffic Heatmap",
-            "data": {
-                "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                "hours": ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"],
-                "values": [
-                    [120, 85, 95, 450, 680, 720, 580, 320],  # Monday
-                    [115, 82, 92, 480, 690, 710, 590, 310],  # Tuesday
-                    [125, 88, 98, 470, 700, 730, 600, 330],  # Wednesday
-                    [118, 86, 94, 460, 685, 715, 585, 325],  # Thursday
-                    [130, 90, 100, 490, 710, 740, 610, 340],  # Friday
-                    [180, 120, 140, 380, 520, 480, 450, 280],  # Saturday
-                    [190, 130, 150, 360, 510, 470, 440, 270]   # Sunday
-                ]
-            },
+            "data": [
+                {"label": "Mon-00:00", "value": 120}, {"label": "Mon-03:00", "value": 85},
+                {"label": "Mon-06:00", "value": 95}, {"label": "Mon-09:00", "value": 450},
+                {"label": "Mon-12:00", "value": 680}, {"label": "Mon-15:00", "value": 720},
+                {"label": "Mon-18:00", "value": 580}, {"label": "Mon-21:00", "value": 320},
+                {"label": "Tue-00:00", "value": 115}, {"label": "Tue-03:00", "value": 82},
+                {"label": "Tue-06:00", "value": 92}, {"label": "Tue-09:00", "value": 480},
+                {"label": "Tue-12:00", "value": 690}, {"label": "Tue-15:00", "value": 710},
+                {"label": "Tue-18:00", "value": 590}, {"label": "Tue-21:00", "value": 310},
+                {"label": "Wed-00:00", "value": 125}, {"label": "Wed-03:00", "value": 88},
+                {"label": "Wed-06:00", "value": 98}, {"label": "Wed-09:00", "value": 470},
+                {"label": "Wed-12:00", "value": 700}, {"label": "Wed-15:00", "value": 730},
+                {"label": "Wed-18:00", "value": 600}, {"label": "Wed-21:00", "value": 330},
+                {"label": "Thu-00:00", "value": 118}, {"label": "Thu-03:00", "value": 86},
+                {"label": "Thu-06:00", "value": 94}, {"label": "Thu-09:00", "value": 460},
+                {"label": "Thu-12:00", "value": 685}, {"label": "Thu-15:00", "value": 715},
+                {"label": "Thu-18:00", "value": 585}, {"label": "Thu-21:00", "value": 325},
+                {"label": "Fri-00:00", "value": 130}, {"label": "Fri-03:00", "value": 90},
+                {"label": "Fri-06:00", "value": 100}, {"label": "Fri-09:00", "value": 490},
+                {"label": "Fri-12:00", "value": 710}, {"label": "Fri-15:00", "value": 740},
+                {"label": "Fri-18:00", "value": 610}, {"label": "Fri-21:00", "value": 340},
+                {"label": "Sat-00:00", "value": 180}, {"label": "Sat-03:00", "value": 120},
+                {"label": "Sat-06:00", "value": 140}, {"label": "Sat-09:00", "value": 380},
+                {"label": "Sat-12:00", "value": 520}, {"label": "Sat-15:00", "value": 480},
+                {"label": "Sat-18:00", "value": 450}, {"label": "Sat-21:00", "value": 280},
+                {"label": "Sun-00:00", "value": 190}, {"label": "Sun-03:00", "value": 130},
+                {"label": "Sun-06:00", "value": 150}, {"label": "Sun-09:00", "value": 360},
+                {"label": "Sun-12:00", "value": 510}, {"label": "Sun-15:00", "value": 470},
+                {"label": "Sun-18:00", "value": 440}, {"label": "Sun-21:00", "value": 270}
+            ],
             "chart_preference": "heatmap",
             "theme": {
-                "color_palette": "thermal",
-                "show_values": True,
-                "annotate_peaks": True
+                "primary": "#DC2626",
+                "secondary": "#059669",
+                "style": "modern"
             },
             "enhance_labels": True
         }
@@ -236,13 +268,20 @@ async def test_single_chart(session_id: str, user_id: str, test_case: Dict[str, 
         # Connect to WebSocket
         print_info(f"Connecting to: {uri}")
         
-        async with websockets.connect(uri, timeout=TEST_TIMEOUT) as websocket:
+        # Create SSL context for secure connection
+        ssl_context = None
+        if uri.startswith("wss://"):
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+        
+        async with websockets.connect(uri, ssl=ssl_context) as websocket:
             # Wait for connection acknowledgment
             ack = await asyncio.wait_for(websocket.recv(), timeout=5)
             ack_data = json.loads(ack)
             
-            if ack_data.get("type") == "connection_established":
-                print_success("Connection established")
+            if ack_data.get("type") == "connection_ack":
+                print_success("Connection acknowledged")
             
             # Prepare request message
             message = {
@@ -250,7 +289,7 @@ async def test_single_chart(session_id: str, user_id: str, test_case: Dict[str, 
                 "correlation_id": f"test_{uuid.uuid4()}",
                 "session_id": session_id,
                 "type": "analytics_request",
-                "request_id": f"req_{uuid.uuid4()}",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
                 "payload": test_case["request"]
             }
             
@@ -271,7 +310,7 @@ async def test_single_chart(session_id: str, user_id: str, test_case: Dict[str, 
                     
                     msg_type = response_data.get("type")
                     
-                    if msg_type == "status_update":
+                    if msg_type == "status":
                         status = response_data.get("status", {}).get("state")
                         print_info(f"Status: {status}")
                     
@@ -282,7 +321,7 @@ async def test_single_chart(session_id: str, user_id: str, test_case: Dict[str, 
                         break
                     
                     elif msg_type == "error":
-                        error_msg = response_data.get("error", {}).get("message", "Unknown error")
+                        error_msg = response_data.get("payload", {}).get("message", "Unknown error")
                         print_error(f"Error: {error_msg}")
                         result["error"] = error_msg
                         break
@@ -297,21 +336,22 @@ async def test_single_chart(session_id: str, user_id: str, test_case: Dict[str, 
                 payload = final_response.get("payload", {})
                 
                 # Validate response structure
-                has_chart = bool(payload.get("chart_base64"))
+                has_chart = bool(payload.get("chart"))
                 has_metadata = bool(payload.get("metadata"))
-                has_insights = bool(payload.get("insights"))
+                has_data = bool(payload.get("data"))
                 
                 if has_chart:
-                    chart_size = len(payload["chart_base64"]) // 1024
+                    chart_size = len(payload["chart"]) // 1024
                     print_success(f"Chart received: {chart_size}KB base64 image")
                 
                 if has_metadata:
                     metadata = payload["metadata"]
                     print_success(f"Metadata: {metadata.get('title', 'No title')}")
                 
-                if has_insights:
-                    insights = payload["insights"]
-                    print_success(f"Insights: {len(insights)} insights generated")
+                if has_data:
+                    insights = payload.get("metadata", {}).get("insights", [])
+                    if insights:
+                        print_success(f"Insights: {len(insights)} insights generated")
                 
                 result["success"] = has_chart and has_metadata
                 result["response"] = payload
@@ -554,10 +594,10 @@ def generate_html_report(results: List[Dict[str, Any]]) -> str:
             response = result["response"]
             
             # Display chart
-            if response.get("chart_base64"):
+            if response.get("chart"):
                 html += f"""
                 <div class="chart-container">
-                    <img src="data:image/png;base64,{response['chart_base64']}" alt="{result['test_name']}">
+                    <img src="data:image/png;base64,{response['chart']}" alt="{result['test_name']}">
                 </div>
                 """
             
@@ -571,7 +611,7 @@ def generate_html_report(results: List[Dict[str, Any]]) -> str:
                 """
                 
                 for key, value in metadata.items():
-                    if key not in ["chart_base64", "insights", "table_data"]:
+                    if key not in ["chart", "insights"]:
                         html += f"""
                         <div class="metadata-item">
                             <div class="metadata-label">{key.replace('_', ' ').title()}</div>
