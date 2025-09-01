@@ -285,11 +285,16 @@ if __name__ == "__main__":
     
     # Override with environment variable if set
     port = int(os.getenv("PORT", args.port))
+    host = args.host
+    
+    # Log startup configuration
+    logger.info(f"Starting server on {host}:{port}")
+    logger.info(f"Debug mode: {settings.debug_mode}")
     
     # Run the application
     uvicorn.run(
         "main:app",
-        host=args.host,
+        host=host,
         port=port,
         reload=args.reload or settings.debug_mode
     )
