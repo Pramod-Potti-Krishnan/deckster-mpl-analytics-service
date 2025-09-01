@@ -959,38 +959,92 @@ plt.show()
     
     def _generate_heatmap(self, data_points: List[DataPoint], title: str) -> str:
         """Generate heatmap code."""
-        # Extract matrix dimensions
-        rows = sorted(set(p.metadata.get('row', 0) for p in data_points))
-        cols = sorted(set(p.metadata.get('col', 0) for p in data_points))
+        # Try to extract matrix structure from data
+        # First, try to parse labels to get row/col info
+        rows_set = set()
+        cols_set = set()
+        value_map = {}
         
-        # Build matrix
-        matrix_size = (len(rows), len(cols))
+        for p in data_points:
+            # Try different parsing strategies
+            label = p.label
+            
+            # Strategy 1: Check metadata for row/col
+            if 'row' in p.metadata and 'col' in p.metadata:
+                row = p.metadata['row']
+                col = p.metadata['col']
+            # Strategy 2: Parse label like "Mon-09:00" or "Monday 9AM"
+            elif '-' in label:
+                parts = label.split('-')
+                if len(parts) == 2:
+                    row, col = parts[0], parts[1]
+                else:
+                    row, col = label, "Value"
+            elif ' ' in label:
+                parts = label.split(' ', 1)
+                if len(parts) == 2:
+                    row, col = parts[0], parts[1]
+                else:
+                    row, col = label, "Value"
+            else:
+                # Fallback: use index-based approach
+                row = f"Row_{len(rows_set) + 1}"
+                col = label
+            
+            rows_set.add(row)
+            cols_set.add(col)
+            value_map[(row, col)] = p.value
+        
+        # Sort rows and columns for consistent ordering
+        rows = sorted(list(rows_set))
+        cols = sorted(list(cols_set))
+        
+        # Build matrix with actual values
+        matrix_values = []
+        for row in rows:
+            row_values = []
+            for col in cols:
+                value = value_map.get((row, col), 0)  # Default to 0 if no data
+                row_values.append(value)
+            matrix_values.append(row_values)
+        
+        # Convert to string representation for code generation
+        matrix_str = str(matrix_values)
+        rows_str = str(rows)
+        cols_str = str(cols)
         
         return f"""
 import matplotlib.pyplot as plt
 import numpy as np
 
-fig, ax = plt.subplots(figsize=(10, 8))
+fig, ax = plt.subplots(figsize=(12, 8))
 
-# Generate sample matrix data
-np.random.seed(42)
-data = np.random.randn({matrix_size[0]}, {matrix_size[1]})
+# Use actual data from user input
+data = np.array({matrix_str})
+rows = {rows_str}
+cols = {cols_str}
 
-# Create heatmap
-im = ax.imshow(data, cmap='RdYlBu_r', aspect='auto')
+# Create heatmap with actual values
+im = ax.imshow(data, cmap='RdYlBu_r', aspect='auto', interpolation='nearest')
 
 # Add colorbar
 cbar = plt.colorbar(im, ax=ax)
 cbar.set_label('Value', fontsize=10)
 
-# Set ticks and labels
-ax.set_xticks(range({matrix_size[1]}))
-ax.set_yticks(range({matrix_size[0]}))
-ax.set_xticklabels([f'Col_{{i+1}}' for i in range({matrix_size[1]})])
-ax.set_yticklabels([f'Row_{{i+1}}' for i in range({matrix_size[0]})])
+# Set ticks and labels from actual data
+ax.set_xticks(range(len(cols)))
+ax.set_yticks(range(len(rows)))
+ax.set_xticklabels(cols)
+ax.set_yticklabels(rows)
 
-# Rotate x labels
+# Rotate x labels for better readability
 plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+
+# Add value annotations on cells
+for i in range(len(rows)):
+    for j in range(len(cols)):
+        text = ax.text(j, i, f'{{data[i, j]:.0f}}',
+                      ha="center", va="center", color="black", fontsize=8)
 
 ax.set_title('{title}', fontsize=14, fontweight='bold')
 

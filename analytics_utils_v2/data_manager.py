@@ -28,6 +28,7 @@ from .models import (
     DataStatistics, ChartData
 )
 from .analytics_playbook import get_chart_synthetic_features
+from .data_transformer import SmartDataTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class DataManager:
         self.random_state = random.Random(self.seed)
         self.np_random = np.random.RandomState(self.seed)
         self.llm_agent = self._create_llm_agent()
+        self.transformer = SmartDataTransformer(self.llm_agent)
     
     def _create_llm_agent(self) -> Agent:
         """Create LLM agent for data enhancement."""
@@ -77,8 +79,13 @@ class DataManager:
         """
         # Check for user-provided data
         if hasattr(request, 'data') and request.data and len(request.data) > 0:
-            logger.info("Using user-provided data")
-            return await self._process_user_data(request.data)
+            logger.info("Using user-provided data with smart transformation")
+            # Use smart transformer for flexible data handling
+            return await self.transformer.transform_for_chart(
+                request.data, 
+                chart_type,
+                request.content if hasattr(request, 'content') else ""
+            )
         
         # Generate synthetic data
         if not hasattr(request, 'use_synthetic_data') or request.use_synthetic_data:
@@ -92,11 +99,11 @@ class DataManager:
         # No data available
         raise ValueError("No data provided and synthetic data generation disabled")
     
-    async def _process_user_data(
+    async def _process_user_data_legacy(
         self, 
         user_data: List[Dict[str, Any]]
     ) -> Tuple[List[DataPoint], DataSource, DataStatistics]:
-        """Process and validate user-provided data."""
+        """Legacy method: Process and validate user-provided data with strict validation."""
         data_points = []
         values = []
         

@@ -14,6 +14,9 @@ from typing import Dict, Any, List, Optional, Literal, Union
 from enum import Enum
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ChartType(str, Enum):
@@ -132,14 +135,30 @@ class AnalyticsRequest(BaseModel):
     
     @validator('data')
     def validate_data(cls, v):
-        """Validate user-provided data structure."""
+        """Validate user-provided data structure with flexible field recognition."""
         if v is not None and len(v) > 0:
-            # Ensure each data point has required fields
+            # More flexible validation - just ensure we have some numeric data
             for item in v:
-                if 'value' not in item:
-                    raise ValueError("Each data point must have a 'value' field")
-                if 'label' not in item and 'x' not in item:
-                    raise ValueError("Each data point must have a 'label' or 'x' field")
+                # Look for any numeric field that could be a value
+                has_numeric = any(
+                    isinstance(item.get(key), (int, float)) 
+                    for key in ['value', 'y', 'amount', 'count', 'total', 
+                               'quantity', 'measure', 'metric', 'score', 
+                               'price', 'sales', 'revenue', 'market_share',
+                               'satisfaction', 'purchase_value', 'traffic']
+                )
+                
+                # Or check if any field contains a number
+                if not has_numeric:
+                    # Check all fields for numeric values
+                    has_numeric = any(
+                        isinstance(val, (int, float))
+                        for val in item.values()
+                    )
+                
+                if not has_numeric:
+                    logger.warning(f"Data point may lack numeric value: {item}")
+                    # Don't raise error - let transformer handle it
         return v
     
     def get_data_source(self) -> DataSource:
