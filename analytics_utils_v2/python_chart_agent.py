@@ -965,14 +965,19 @@ plt.show()
         cols_set = set()
         value_map = {}
         
-        for p in data_points:
+        for i, p in enumerate(data_points):
+            # Debug first few data points
+            if i < 3:
+                logger.info(f"Heatmap DataPoint {i}: label='{p.label}', value={p.value}, metadata={p.metadata}")
+            
             # Try different parsing strategies
             label = p.label
             
             # Strategy 1: Check metadata for row/col
-            if 'row' in p.metadata and 'col' in p.metadata:
+            if p.metadata and 'row' in p.metadata and 'col' in p.metadata:
                 row = p.metadata['row']
                 col = p.metadata['col']
+                logger.debug(f"Using metadata for '{label}': row='{row}', col='{col}'")
             # Strategy 2: Parse label like "Mon-09:00" or "Monday 9AM"
             elif '-' in label:
                 parts = label.split('-')
@@ -998,6 +1003,9 @@ plt.show()
         # Sort rows and columns for consistent ordering
         rows = sorted(list(rows_set))
         cols = sorted(list(cols_set))
+        
+        # Debug: log the final rows and cols
+        logger.info(f"Heatmap matrix: rows={rows}, cols={cols}")
         
         # Build matrix with actual values
         matrix_values = []

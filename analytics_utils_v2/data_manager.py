@@ -79,13 +79,15 @@ class DataManager:
         """
         # Check for user-provided data
         if hasattr(request, 'data') and request.data and len(request.data) > 0:
-            logger.info("Using user-provided data with smart transformation")
+            logger.info(f"Using user-provided data with smart transformation for {chart_type}")
             # Use smart transformer for flexible data handling
-            return await self.transformer.transform_for_chart(
+            result = await self.transformer.transform_for_chart(
                 request.data, 
                 chart_type,
                 request.content if hasattr(request, 'content') else ""
             )
+            logger.info(f"Transformation complete: {len(result[0])} data points")
+            return result
         
         # Generate synthetic data
         if not hasattr(request, 'use_synthetic_data') or request.use_synthetic_data:

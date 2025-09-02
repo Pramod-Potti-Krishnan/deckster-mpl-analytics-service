@@ -39,7 +39,7 @@ class SmartDataTransformer:
         self.field_mappings = {
             'label': ['label', 'name', 'category', 'x', 'key', 'item', 'id', 'title'],
             'value': ['value', 'y', 'amount', 'count', 'total', 'quantity', 'measure', 
-                     'metric', 'score', 'price', 'sales', 'revenue'],
+                     'metric', 'score', 'price', 'sales', 'revenue', 'traffic', 'visitors'],
             'series': ['series', 'group', 'type', 'class', 'segment', 'product'],
             'category': ['category', 'group', 'type', 'classification', 'segment'],
             'time': ['date', 'time', 'timestamp', 'period', 'month', 'year', 'day', 
@@ -96,6 +96,7 @@ class SmartDataTransformer:
         Transform data specifically for heatmap visualization.
         Extracts row/column information from various formats.
         """
+        logger.info(f"Transforming {len(user_data)} items for heatmap")
         data_points = []
         
         for item in user_data:
@@ -110,6 +111,12 @@ class SmartDataTransformer:
             # Extract or parse row/column information
             row, col = self._parse_matrix_position(item, label)
             
+            # If we have separate day/hour fields but no label, construct one
+            if label is None and row and col:
+                label = f"{row}-{col}"
+            
+            logger.debug(f"Parsed label '{label}' into row='{row}', col='{col}'")
+            
             # Create data point with metadata
             data_point = DataPoint(
                 label=label,
@@ -118,6 +125,7 @@ class SmartDataTransformer:
             )
             data_points.append(data_point)
         
+        logger.info(f"Created {len(data_points)} data points for heatmap with row/col metadata")
         return data_points
     
     async def _transform_scatter_data(
